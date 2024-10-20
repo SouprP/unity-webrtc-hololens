@@ -1,0 +1,24 @@
+{
+  "name": "com.souprpk.unity-webrtc-hololens",
+  "version": "1.0.0",
+  "description": "WebSocket client for Unity.",
+  "license": "Apache 2.0",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": {
+    "name": "SouprPK",
+    "email": "potyrala.igor@gmail.com",
+    "url": ""
+  },
+  "keywords": [
+    "websocket",
+    "websockets"
+  ],
+  "displayName": "Unity WebRTC HoloLens",
+  "unity": "2022.3",
+  "dependencies": {
+    "com.unity.webrtc": "3.0.0-pre.7"
+  }
+}

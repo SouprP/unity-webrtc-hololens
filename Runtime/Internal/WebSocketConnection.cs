@@ -59,12 +59,12 @@ public class WebSocketConnection
 
     public async Task ConnectAsync(string server, uint port)
     {
-        await ConnectAsync(new Uri("ws://{server}:{port}"));
+        await ConnectAsync(new Uri($"ws://{server}:{port}"));
     }
     
     public async Task ConnectAsync(string server)
     {
-        await ConnectAsync(new Uri("ws://{server}"));
+        await ConnectAsync(new Uri($"ws://{server}"));
     }
 
     public async Task DisconnectAsync()

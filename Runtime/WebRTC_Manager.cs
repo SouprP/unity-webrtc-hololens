@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Internal;
 using Models;
+using Unity.Plastic.Newtonsoft.Json;
 using Unity.WebRTC;
 using UnityEngine;
 
@@ -17,7 +18,9 @@ public class WebRTC_Manager : MonoBehaviour
     // private SessionDescription _receivedOfferSessionDescTemp;
 
     [SerializeField] private string server = "localhost";
-    [SerializeField] private uint port = 8080;
+    [SerializeField] private uint port = 8765;
+    [SerializeField] private string sessionId = "session1";
+    [SerializeField] private string peerId = "peer1";
     
     async void Awake()
     {
@@ -30,6 +33,7 @@ public class WebRTC_Manager : MonoBehaviour
             _ws.OnMessageReceived += OnWebSocketMessage;
             _ws.OnConnectionOpened += OnWebSocketOpen;
             // Debug.Log("Awake port");
+            InitClient();
             return;
         }
 
@@ -37,6 +41,7 @@ public class WebRTC_Manager : MonoBehaviour
         _ws.OnMessageReceived += OnWebSocketMessage;
         _ws.OnConnectionOpened += OnWebSocketOpen;
         // Debug.Log("Awake default");
+        InitClient();
     }
 
     async void OnDestroy()
@@ -61,35 +66,27 @@ public class WebRTC_Manager : MonoBehaviour
      *
      */
 
-    private void InitClient()
+    private async void InitClient()
     {
         _peer = new RTCPeerConnection();
+        _peer.SetLocalDescription();
         Debug.Log("Init");
-        // _peer.OnIceCandidate = candidate =>
-        // {
-        //     var candidateInit = new CandidateInit()
-        //     {
-        //         SdpMid = candidate.SdpMid,
-        //         SdpMLineIndex = candidate.SdpMLineIndex ?? 0,
-        //         Candidate = candidate.Candidate
-        //     };
-        //     _ws.SendAsync(MessageTypes.CANDIDATE.ToString() + candidateInit);
-        // };
-        //
-        // _peer.OnIceConnectionChange = state =>
-        // {
-        //     Debug.Log(state);
-        // };
-        //
-        // _peer.OnDataChannel = channel =>
-        // {
-        //     _serverChannel = channel;
-        //     _serverChannel.OnMessage = bytes =>
-        //     {
-        //         var message = System.Text.Encoding.UTF8.GetString(bytes);
-        //         Debug.Log("Receiver received: " + message);
-        //     };
-        // };
+        
+        //var joinSessionRequest = new
+        //{
+        //    type = "join_session",
+        //    session_id = sessionId,
+        //    peer_id = peerId
+        //};
+
+        var json = new JoinSessionMessage()
+        {
+            type = "join_session",
+            session_id = sessionId,
+            peer_id = peerId,
+        };
+        
+        await _ws.SendAsync(JsonUtility.ToJson(json));
     }
 
     private void OnWebSocketOpen()
@@ -146,8 +143,17 @@ public class WebRTC_Manager : MonoBehaviour
         Debug.Log("Handling Join Session with session ID: " + message.session_id);
     }
 
-    private void HandleJoinedSuccessfully(JoinedSuccessfullyMessage message)
+    private async void HandleJoinedSuccessfully(JoinedSuccessfullyMessage message)
     {
+        var json = new SdpOfferMessage()
+        {
+            type = "sdp_offer",
+            session_id = sessionId,
+            peer_id = peerId,
+            sdp = _peer.LocalDescription.sdp
+        };
+        
+        await _ws.SendAsync(JsonUtility.ToJson(json));
         Debug.Log("Joined successfully, number of peers: " + message.peer_amount);
     }
 

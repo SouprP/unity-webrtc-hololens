@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 
 public enum ConnectionState
 {
@@ -98,6 +99,7 @@ public class WebSocketConnection
     public async Task SendAsync(string data)
     {
         byte[] buffer = Encoding.UTF8.GetBytes(data);
+        Debug.Log(data);
         await SendAsync(buffer);
     }
 

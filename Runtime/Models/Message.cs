@@ -36,6 +36,7 @@ namespace Models
     [Serializable]
     public class JoinSessionMessage : Message
     {
+        public string peer_id;
         public string session_id;
     }
 
@@ -66,6 +67,7 @@ namespace Models
     [Serializable]
     public class SdpOfferMessage : Message
     {
+        public string session_id;
         public string peer_id;
         public string sdp;
     }

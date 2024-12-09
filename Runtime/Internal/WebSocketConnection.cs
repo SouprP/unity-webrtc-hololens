@@ -99,7 +99,7 @@ public class WebSocketConnection
     public async Task SendAsync(string data)
     {
         byte[] buffer = Encoding.UTF8.GetBytes(data);
-        Debug.Log(data);
+        // Debug.Log(data);
         await SendAsync(buffer);
     }
 
@@ -127,5 +127,10 @@ public class WebSocketConnection
             OnError?.Invoke(ex);
             _state = ConnectionState.Error;
         }
+    }
+
+    public WebSocketState getState()
+    {
+        return _webSocket.State;
     }
 }

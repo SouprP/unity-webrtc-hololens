@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Models
 {
@@ -6,6 +7,7 @@ namespace Models
     public class Message
     {
         public string type;
+        public string peer_id;
 
         // Factory method to create Message objects based on type
         public static Message CreateMessage(string type)
@@ -36,7 +38,7 @@ namespace Models
     [Serializable]
     public class JoinSessionMessage : Message
     {
-        public string peer_id;
+        // public string peer_id;
         public string session_id;
     }
 
@@ -49,7 +51,7 @@ namespace Models
     [Serializable]
     public class PeerJoinedMessage : Message
     {
-        public string peer_id;
+        // public string peer_id;
     }
 
     [Serializable]
@@ -61,29 +63,30 @@ namespace Models
     [Serializable]
     public class PeerLeftMessage : Message
     {
-        public string peer_id;
+        // public string peer_id;
     }
 
     [Serializable]
     public class SdpOfferMessage : Message
     {
         public string session_id;
-        public string peer_id;
+        // public string peer_id;
         public string sdp;
     }
 
     [Serializable]
     public class SdpAnswerMessage : Message
     {
-        public string peer_id;
+        // public string peer_id;
         public string sdp;
     }
 
     [Serializable]
     public class CandidateMessage : Message
     {
-        public string peer_id;
-        public string candidate;
+        // public string peer_id;
+        public Dictionary<String,String> candidate;
+        //public string candidate;
     }
 
     [Serializable]
@@ -95,7 +98,8 @@ namespace Models
     [Serializable]
     public class OpenDataChannelMessage : Message
     {
-        public string sdp;
+        public string channel_id;
+        public string session_id;
     }
 
     [Serializable]
@@ -108,7 +112,7 @@ namespace Models
     public class MuteDataChannelMessage : Message
     {
         public string session_id;
-        public string peer_id;
+        // public string peer_id;
         public string target_id;
         public string channel_id;
     }
@@ -117,7 +121,7 @@ namespace Models
     public class UnmuteDataChannelMessage : Message
     {
         public string session_id;
-        public string peer_id;
+        // public string peer_id;
         public string target_id;
         public string channel_id;
     }
@@ -126,7 +130,7 @@ namespace Models
     public class KickTargetMessage : Message
     {
         public string session_id;
-        public string peer_id;
+        // public string peer_id;
         public string target_id;
     }
 
@@ -134,7 +138,7 @@ namespace Models
     public class ChangeReadPermissionMessage : Message
     {
         public string session_id;
-        public string peer_id;
+        // public string peer_id;
         public string target_id;
         public string channel_id;
     }
@@ -143,7 +147,7 @@ namespace Models
     public class ChangeWritePermissionMessage : Message
     {
         public string session_id;
-        public string peer_id;
+        // public string peer_id;
         public string target_id;
         public string channel_id;
     }

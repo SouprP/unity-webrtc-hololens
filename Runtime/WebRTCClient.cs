@@ -10,15 +10,18 @@ public class WebRTCClient
     private WebSocketConnection _ws;
     private RTCPeerConnection _peer;
     private RTCDataChannel _serverChannel;
-    private Dictionary<string, RTCDataChannel> _dataChannels = new Dictionary<string, RTCDataChannel>();
+    
+    public delegate void OnDataReceivedDelegate(byte[] data);
+    public event OnDataReceivedDelegate OnDataReceived;
     
     private bool _isChannelOpen = false;
     private bool _debug = false;
 
-    private string _server = "localhost"; 
-    private uint _port = 8765;
-    private string _sessionId = "session1";
-    private string _peerId = "peer1";
+   [SerializeField] private string _server = "localhost"; 
+   [SerializeField] private uint _port = 8765;
+   [SerializeField] private string _sessionId = "S1";
+   [SerializeField] private string _peerId = "unity_client_p1";
+   [SerializeField] private string _channelId = "chat";
 
     /**
      *
@@ -29,27 +32,30 @@ public class WebRTCClient
 
     public WebRTCClient()
     {
-        // this.sessionId = Guid.NewGuid().ToString();
-        this._peerId = Guid.NewGuid().ToString();
+        
     }
     public WebRTCClient(string server, uint port)
     {
-        // this.sessionId = Guid.NewGuid().ToString();
         this._peerId = Guid.NewGuid().ToString();
         this._server = server;
         this._port = port;
     }
-
     public WebRTCClient(string sessionId)
     {
         this._sessionId = sessionId;
         this._peerId = Guid.NewGuid().ToString();
-        this._peerId = "sfu_" + Guid.NewGuid().ToString();
+        // this._peerId = "sfu_" + Guid.NewGuid().ToString();
     }
     public WebRTCClient(string sessionId, string peerId)
     {
         this._sessionId = sessionId;
         this._peerId = peerId;
+    }
+    public WebRTCClient(string sessionId, string peerId, string channelId)
+    {
+        this._sessionId = sessionId;
+        this._peerId = peerId;
+        this._channelId = channelId;
     }
     public WebRTCClient(string server, uint port, string sessionId, string peerId)
     {
@@ -58,11 +64,23 @@ public class WebRTCClient
         this._sessionId = sessionId;
         this._peerId = peerId;
     }
+    public WebRTCClient(string server, uint port, string sessionId, string peerId, string channelId)
+    {
+        this._server = server;
+        this._port = port;
+        this._sessionId = sessionId;
+        this._peerId = peerId;
+        this._channelId = channelId;
+    }
     
     public void SetServer(string server){this._server = server;}
     public void SetPort(uint port){this._port = port;}
     public void SetSessionId(string sessionId){this._sessionId = sessionId;}
     public void SetPeerId(string peerId){this._peerId = peerId;}
+    public void SetChannel(string channelId)
+    {
+        this._channelId = channelId;
+    }
 
     public void EnableDebug(bool enabled)
     {
@@ -82,6 +100,8 @@ public class WebRTCClient
         int tries = 0;
         while (_ws.getState() != WebSocketState.Open)
         {
+            if(_debug) Debug.Log("Attempting connection to websocket ws://" + this._server + ":" + this._port);
+                
             if (_port > 0)
             {
                 await _ws.ConnectAsync(_server, _port);
@@ -107,9 +127,11 @@ public class WebRTCClient
         
         // peer event handlers
         // _peer.OnIceCandidate += OnIceCandidate;
-        _peer.OnDataChannel += OnDataChannel;
-        
-        _peer.SetLocalDescription();
+        // _peer.OnDataChannel += OnDataChannel;
+        _serverChannel = _peer.CreateDataChannel(_channelId);
+        _serverChannel.OnOpen += OnDataChannel;
+        // _peer.OnIceConnectionChange = state => Debug.Log("Ice connection changed to " + state); 
+        _serverChannel.OnMessage += OnChannelMessage;
 
         // sending a join request to the SFU
         var joinJson = new JoinSessionMessage()
@@ -159,19 +181,10 @@ public class WebRTCClient
 
         switch (baseMessage.type.ToLower())
         {
-            // case "join_session":
-            //     var joinSessionMessage = JsonUtility.FromJson<JoinSessionMessage>(message);
-            // HandleJoinSession(joinSessionMessage);
-            // break;
 
             case "joined_successfully":
                 var joinedSuccessfullyMessage = JsonUtility.FromJson<JoinedSuccessfullyMessage>(message);
                 HandleJoinedSuccessfully(joinedSuccessfullyMessage);
-                break;
-
-            case "sdp_offer":
-                var sdpOfferMessage = JsonUtility.FromJson<SdpOfferMessage>(message);
-                HandleSdpOffer(sdpOfferMessage);
                 break;
 
             case "sdp_answer":
@@ -182,11 +195,6 @@ public class WebRTCClient
             case "candidate":
                 var candidateMessage = JsonUtility.FromJson<CandidateMessage>(message);
                 HandleCandidate(candidateMessage);
-                break;
-
-            case "open_data_channel":
-                var openDataChannelMessage = JsonUtility.FromJson<OpenDataChannelMessage>(message);
-                HandleOpenDataChannel(openDataChannelMessage);
                 break;
             
             default:
@@ -212,6 +220,7 @@ public class WebRTCClient
     private async void HandleJoinedSuccessfully(JoinedSuccessfullyMessage message)
     {
         // setup and sending sdp offer to server
+        _peer.SetLocalDescription();
         var sdpJson = new SdpOfferMessage()
         {
             type = "sdp_offer",
@@ -222,54 +231,7 @@ public class WebRTCClient
         
         await _ws.SendAsync(JsonUtility.ToJson(sdpJson));
     }
-
-    private async void HandleSdpOffer(SdpOfferMessage message)
-    {
-        if (_debug)
-            Debug.Log("Handling SDP Offer from peer: " + message.peer_id);
-        
-        Debug.Log("SDP OFFER sdp: " + message.sdp);
-        var offerDesc = new RTCSessionDescription()
-        {
-            type = RTCSdpType.Offer,
-            sdp = message.sdp,
-        };
-
-        // setting the remote description with the receiver sdp offer
-        _peer.SetRemoteDescription(ref offerDesc);
-
-        // creating and sending sdp anwser
-        var answer = _peer.CreateAnswer();
-        var answerDesc = answer.Desc;
-        Debug.Log("Desc SDP: " + answerDesc.sdp);
-        _peer.SetLocalDescription(ref answerDesc);
-        
-        var answerMessage = new SdpAnswerMessage
-        {
-            type = "sdp_answer",
-            peer_id = message.peer_id,
-            sdp = answerDesc.sdp
-        };
-        
-        await _ws.SendAsync(JsonUtility.ToJson(answerMessage));
-        
-        if (_debug)
-            Debug.Log("SDP Answer sent successfully!");
-        
-        // THIS WORKS
-        // var channelJson = new OpenDataChannelMessage()
-        // {
-        //     type = "open_data_channel",
-        //     session_id = _sessionId,
-        //     channel_id = "channel_data_1",
-        //     peer_id = this._peerId,
-        // };
-        //
-        // Debug.Log(JsonUtility.ToJson(channelJson));
-        //
-        // await _ws.SendAsync(JsonUtility.ToJson(channelJson));
-    }
-
+    
     private async void HandleSdpAnswer(SdpAnswerMessage message)
     {
         if(_debug)
@@ -281,19 +243,8 @@ public class WebRTCClient
             type = RTCSdpType.Answer
         };
         _peer.SetRemoteDescription(ref answerDesc);
+        _isChannelOpen = true;
         
-
-        // var channelJson = new OpenDataChannelMessage()
-        // {
-        //     type = "open_data_channel",
-        //     session_id = _sessionId,
-        //     channel_id = "channel_data_1",
-        //     peer_id = this._peerId,
-        // };
-        //
-        // Debug.Log(JsonUtility.ToJson(channelJson));
-        //
-        // await _ws.SendAsync(JsonUtility.ToJson(channelJson));
     }
     
     private void HandleCandidate(CandidateMessage message)
@@ -312,34 +263,21 @@ public class WebRTCClient
         _peer.AddIceCandidate(iceCandidate);
     }
     
-    private void OnDataChannel(RTCDataChannel channel)
+    private void OnDataChannel()
     {
-        if (_debug) Debug.Log("Data channel opened: " + channel.Label);
+        if(_debug) Debug.Log("Channel opened");
 
-        _dataChannels[channel.Label] = channel;
-        channel.OnMessage = bytes => Debug.Log($"Received message on {channel.Label}: {System.Text.Encoding.UTF8.GetString(bytes)}");
+        // _serverChannel.Send("Hello World!");
     }
 
-    private void HandleOpenDataChannel(OpenDataChannelMessage message)
+    /**
+     *
+     *
+     *          CUSTOM EVENTS
+     *
+     */
+    private void OnChannelMessage(byte[] data)
     {
-        if (_debug) 
-            Debug.Log("Opening data channel: " + message.channel_id);
-        
-        var dataChannel = _peer.CreateDataChannel(message.channel_id);
-        _dataChannels[message.channel_id] = dataChannel;
-        _serverChannel = dataChannel;
-        dataChannel.OnOpen = () =>
-        {
-            Debug.Log($"Data channel {message.channel_id} opened.");
-            _isChannelOpen = true;
-        };
-        dataChannel.OnMessage = bytes => Debug.Log($"Received message on {message.channel_id}: {System.Text.Encoding.UTF8.GetString(bytes)}");
-
-        
-    }
-
-    private void OnChannelMessage()
-    {
-        
+        OnDataReceived?.Invoke(data);
     }
 }

@@ -144,8 +144,9 @@ public class WebRTCClient
         await _ws.SendAsync(JsonUtility.ToJson(joinJson));
     }
 
-    public async void Leave()
+    public async void Close()
     {
+        _serverChannel.Close();
         var leaveJson = new LeaveSessionMessage()
         {
             type = "leave_session",

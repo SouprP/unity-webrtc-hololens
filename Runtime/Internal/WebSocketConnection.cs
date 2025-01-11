@@ -98,6 +98,7 @@ public class WebSocketConnection
 
     public async Task SendAsync(string data)
     {
+        //Debug.Log("SEND: " + data);
         byte[] buffer = Encoding.UTF8.GetBytes(data);
         await SendAsync(buffer);
     }

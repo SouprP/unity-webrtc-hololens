@@ -19,6 +19,6 @@
   "displayName": "Unity WebRTC HoloLens",
   "unity": "2022.3",
   "dependencies": {
-    "com.unity.webrtc": "3.0.0-pre.7"
+    "com.microsoft.mixedreality.webrtc": "2.2.0"
   }
 }

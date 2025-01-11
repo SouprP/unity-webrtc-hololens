@@ -85,6 +85,7 @@ namespace Models
     public class CandidateMessage : Message
     {
         // public string peer_id;
+        public string session_id;
         public Dictionary<String,String> candidate;
         //public string candidate;
     }

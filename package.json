@@ -19,6 +19,6 @@
   "displayName": "Unity WebRTC HoloLens",
   "unity": "2022.3",
   "dependencies": {
-    "com.microsoft.mixedreality.webrtc": "https://github.com/microsoft/MixedReality-WebRTC/releases/download/v2.0.2/com.microsoft.mixedreality.webrtc-2.0.2.tgz"
+    "com.microsoft.mixedreality.webrtc": "file:unity-webrtc-hololens/com.microsoft.mixedreality.webrtc-2.0.2.tgz"
   }
 }

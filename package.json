@@ -17,8 +17,5 @@
     "websockets"
   ],
   "displayName": "Unity WebRTC HoloLens",
-  "unity": "2022.3",
-  "dependencies": {
-    "com.microsoft.mixedreality.webrtc": "file:unity-webrtc-hololens/com.microsoft.mixedreality.webrtc-2.0.2.tgz"
-  }
+  "unity": "2022.3"
 }

@@ -18,7 +18,8 @@ of Unity editor:
 
 This package requires the following additional packages:
 
-- **WebRTC 3.0.0-pre.7**
+[//]: # (- **WebRTC 3.0.0-pre.7**)
+- **Mixed Reality WebRTC 2.0.2**
 
 # Installing package
 
@@ -79,7 +80,7 @@ message receiving
 _client.InitClient();
 _client.OnDataReceived += OnMessage;
 
-void OnMessage(byte[] data)
+private void OnMessage(byte[] data)
 {
     string message = Encoding.UTF8.GetString(data);
     Debug.Log("Message received: " + message);
@@ -93,7 +94,7 @@ a data channel is created, and it's possible to send messages
 with `string` and `byte[]` data types.
 
 ```csharp
-void Update()
+private void Update()
 {
     if(Input.GetKeyDown(KeyCode.Space))
         _client.Send("Hello World");
@@ -123,7 +124,7 @@ using UnityEngine;
 public class Example : MonoBehaviour
 {
     WebRTCClient _client;
-    void Start()
+    private void Start()
     {
         // Unique random peerId
         string peerId = Guid.NewGuid().ToString();
@@ -140,13 +141,13 @@ public class Example : MonoBehaviour
         _client.OnDataReceived += OnMessage;
     }
 
-    void Update()
+    private void Update()
     {
         if(Input.GetKeyDown(KeyCode.Space))
             _client.Send("Unity client message on key press.");
     }
 
-    void OnMessage(byte[] data)
+    private void OnMessage(byte[] data)
     {
         string message = Encoding.UTF8.GetString(data);
         Debug.Log("Message received: " + message);

@@ -17,5 +17,8 @@
     "websockets"
   ],
   "displayName": "Unity WebRTC HoloLens",
-  "unity": "2022.3"
+  "unity": "2022.3",
+  "dependencies": {
+    "com.endel.nativewebsocket": "1.1.4"
+  }
 }

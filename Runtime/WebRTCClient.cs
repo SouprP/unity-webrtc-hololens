@@ -6,6 +6,8 @@ using Microsoft.MixedReality.WebRTC;
 using UnityEngine;
 using Models;
 
+using Internal;
+
 public class WebRTCClient
 {
     private WebSocketConnection _ws;
@@ -45,20 +47,46 @@ public class WebRTCClient
 
     public async void InitClient()
     {
-        _ws = new WebSocketConnection();
+        try
+        {
+            _ws = new WebSocketConnection($"ws://{_server}:{_port}");
+            await _ws.ConnectAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw new Exception($"WebSocket connection failed: {e.Message}");
+        }
+        // _ws = new WebSocketConnection("ws://{_server}:{_port}");
 
         // Connect to WebSocket
-        int tries = 0;
-        while (_ws.getState() != System.Net.WebSockets.WebSocketState.Open)
-        {
-            if (_debug) Debug.Log($"Attempting WebSocket connection to ws://{_server}:{_port}");
-            await _ws.ConnectAsync(_server, _port);
-            if (++tries == 5)
-                throw new Exception("Could not establish connection to server");
-        }
+        // int tries = 0;
+        // await _ws.ConnectAsync();
+        // while (_ws.getState() != System.Net.WebSockets.WebSocketState.Open)
+        // while(_ws.GetState() != ConnectionState.Open)
+        // // while(_ws.GetState() != WebSocketState.Open)
+        // {
+        //     Debug.LogError("Trying connection");
+        //     if (_debug) Debug.Log($"Attempting WebSocket connection to ws://{_server}:{_port}");
+        //     await _ws.ConnectAsync(_server, _port);
+        //     if (++tries == 5)
+        //         throw new Exception("Could not establish connection to server 19");
+        // }
 
-        _ws.OnConnectionOpened += OnWebSocketOpen;
-        _ws.OnMessageReceived += OnWebSocketMessage;
+        Debug.LogError("Connected");
+        
+        await _ws.ReceiveAsync(message =>
+        {
+            string receivedMessage = System.Text.Encoding.UTF8.GetString(message);
+            Console.WriteLine($"Received message: {receivedMessage}");
+        });
+        
+        byte[] messageBytes = System.Text.Encoding.UTF8.GetBytes("haha i love MZYK");
+        await _ws.SendAsync(messageBytes);
+
+        // _ws.OnConnectionOpened += OnWebSocketOpen;
+        // _ws.OnMessageReceived += OnWebSocketMessage;
+        // _ws.
 
         // Set up the PeerConnection
         _peer = new PeerConnection();

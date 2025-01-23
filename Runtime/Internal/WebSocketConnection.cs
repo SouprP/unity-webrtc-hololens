@@ -88,7 +88,9 @@ public class WebSocketConnection
         try
         {
             // byte[] messageBytes = Encoding.UTF8.GetBytes(message);
-            await _webSocket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Text, true, _cancellationTokenSource.Token);
+            if(_webSocket.State == WebSocketState.Open)
+                await _webSocket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Text, true, CancellationToken.None);
+                // await _webSocket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Text, true, _cancellationTokenSource.Token);
         }
         catch (Exception ex)
         {

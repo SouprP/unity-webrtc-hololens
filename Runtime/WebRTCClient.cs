@@ -73,6 +73,10 @@ public class WebRTCClient
         //         throw new Exception("Could not establish connection to server 19");
         // }
 
+        while (!_ws.IsWebSocketOpen())
+        {
+            Debug.Log("Connecting to websocket");
+        }
         Debug.LogError("Connected");
         
         await _ws.ReceiveAsync(message =>
